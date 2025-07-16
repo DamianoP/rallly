@@ -1,9 +1,8 @@
+import type { LicenseCheckoutMetadata } from "@/features/licensing/schema";
 import type { LicenseType } from "@prisma/client";
 import { stripe } from "@rallly/billing";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import type { LicenseCheckoutMetadata } from "@/features/licensing/schema";
 
 const productSchema = z.enum(["plus", "organization"]);
 

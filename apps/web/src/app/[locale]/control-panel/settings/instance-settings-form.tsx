@@ -1,5 +1,18 @@
 "use client";
 
+import {
+  SettingsGroup,
+  SettingsGroupContent,
+  SettingsGroupDescription,
+  SettingsGroupHeader,
+  SettingsGroupTitle,
+} from "@/components/settings-group";
+import { Trans } from "@/components/trans";
+import {
+  type InstanceSettings,
+  instanceSettingsSchema,
+} from "@/features/instance-settings/schema";
+import { useTranslation } from "@/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ActionBar,
@@ -15,22 +28,10 @@ import {
   FormItem,
   FormLabel,
 } from "@rallly/ui/form";
-import { toast } from "@rallly/ui/sonner";
+import { useToast } from "@rallly/ui/hooks/use-toast";
 import { Switch } from "@rallly/ui/switch";
 import { useForm } from "react-hook-form";
-import {
-  SettingsGroup,
-  SettingsGroupContent,
-  SettingsGroupDescription,
-  SettingsGroupHeader,
-  SettingsGroupTitle,
-} from "@/components/settings-group";
-import { Trans } from "@/components/trans";
-import type { InstanceSettings } from "@/features/instance-settings/schema";
-import { instanceSettingsSchema } from "@/features/instance-settings/schema";
-import { useSafeAction } from "@/features/safe-action/client";
-import { useTranslation } from "@/i18n/client";
-import { updateInstanceSettingsAction } from "./actions";
+import { updateInstanceSettings } from "./actions";
 
 export function InstanceSettingsForm({
   defaultValue,
@@ -42,9 +43,9 @@ export function InstanceSettingsForm({
     resolver: zodResolver(instanceSettingsSchema),
   });
 
-  const updateInstanceSettings = useSafeAction(updateInstanceSettingsAction);
-
   const { t } = useTranslation();
+
+  const { toast } = useToast();
 
   return (
     <Form {...form}>
@@ -52,21 +53,19 @@ export function InstanceSettingsForm({
         name="instance-settings-form"
         onSubmit={form.handleSubmit(async (data) => {
           try {
-            await updateInstanceSettings.executeAsync(data);
+            await updateInstanceSettings(data);
             form.reset(data);
           } catch (error) {
             console.error(error);
-            toast.error(
-              t("unexpectedError", {
+            toast({
+              title: t("unexpectedError", {
                 defaultValue: "Unexpected Error",
               }),
-              {
-                description: t("unexpectedErrorDescription", {
-                  defaultValue:
-                    "There was an unexpected error. Please try again later.",
-                }),
-              },
-            );
+              description: t("unexpectedErrorDescription", {
+                defaultValue:
+                  "There was an unexpected error. Please try again later.",
+              }),
+            });
           }
         })}
       >

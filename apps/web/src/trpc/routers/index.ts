@@ -5,7 +5,9 @@ import utc from "dayjs/plugin/utc";
 
 import { mergeRouters, router } from "../trpc";
 import { auth } from "./auth";
+import { dashboard } from "./dashboard";
 import { polls } from "./polls";
+import { scheduledEvents } from "./scheduled-events";
 import { user } from "./user";
 
 dayjs.extend(toArray); // used for creating ics
@@ -14,9 +16,11 @@ dayjs.extend(utc);
 
 export const appRouter = mergeRouters(
   router({
+    scheduledEvents,
     auth,
     polls,
     user,
+    dashboard,
   }),
 );
 

@@ -24,22 +24,19 @@ import { useForm } from "react-hook-form";
 
 import { Trans } from "@/components/trans";
 
-import { useSafeAction } from "@/features/safe-action/client";
 import { isSelfHosted } from "@/utils/constants";
-import { submitFeedbackAction } from "../actions";
+import { submitFeedback } from "../actions";
 import type { Feedback } from "../schema";
 import { feedbackSchema } from "../schema";
 
 export function FeedbackToggle() {
-  const submitFeedback = useSafeAction(submitFeedbackAction);
-  const form = useForm<Feedback>({
-    resolver: zodResolver(feedbackSchema),
-  });
-
   if (isSelfHosted) {
     return null;
   }
 
+  const form = useForm<Feedback>({
+    resolver: zodResolver(feedbackSchema),
+  });
   return (
     <Dialog>
       <Tooltip>
@@ -74,7 +71,17 @@ export function FeedbackToggle() {
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(submitFeedback.executeAsync)}>
+              <form
+                onSubmit={form.handleSubmit(async (data) => {
+                  const res = await submitFeedback(data);
+
+                  if (res.error) {
+                    form.setError("content", {
+                      message: res.error,
+                    });
+                  }
+                })}
+              >
                 <FormField
                   control={form.control}
                   name="content"

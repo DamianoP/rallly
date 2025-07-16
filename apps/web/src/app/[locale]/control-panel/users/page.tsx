@@ -1,9 +1,5 @@
-import type { Prisma } from "@rallly/database";
-import { prisma } from "@rallly/database";
-import { UsersIcon } from "lucide-react";
-import type { Metadata } from "next";
-import z from "zod";
 import { PageIcon } from "@/app/components/page-icons";
+import { requireAdmin } from "@/auth/queries";
 import {
   EmptyState,
   EmptyStateDescription,
@@ -19,8 +15,10 @@ import {
 import { Pagination } from "@/components/pagination";
 import { StackedList } from "@/components/stacked-list";
 import { Trans } from "@/components/trans";
-import { loadAdminUserAbility } from "@/data/user";
 import { getTranslation } from "@/i18n/server";
+import { type Prisma, prisma } from "@rallly/database";
+import { UsersIcon } from "lucide-react";
+import z from "zod";
 import { UserRow } from "./user-row";
 import { UserSearchInput } from "./user-search-input";
 import { UsersTabbedView } from "./users-tabbed-view";
@@ -36,7 +34,7 @@ async function loadData({
   q?: string;
   role?: "admin" | "user";
 }) {
-  const { user } = await loadAdminUserAbility();
+  const adminUser = await requireAdmin();
 
   const where: Prisma.UserWhereInput = {};
 
@@ -82,7 +80,7 @@ async function loadData({
   });
 
   return {
-    adminUser: user,
+    adminUser,
     allUsers: allUsers.map((user) => ({
       ...user,
       image: user.image ?? undefined,
@@ -104,7 +102,7 @@ export default async function AdminPage(props: {
   const searchParams = await props.searchParams;
   const { page, pageSize } = searchParamsSchema.parse(searchParams);
 
-  const { allUsers, totalUsers } = await loadData({
+  const { adminUser, allUsers, totalUsers } = await loadData({
     page,
     pageSize,
     q: searchParams.q ? String(searchParams.q) : undefined,
@@ -175,7 +173,7 @@ export default async function AdminPage(props: {
   );
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata() {
   const { t } = await getTranslation();
   return {
     title: t("users", {

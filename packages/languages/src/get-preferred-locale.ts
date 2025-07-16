@@ -27,7 +27,7 @@ export function getPreferredLocale({
 
   try {
     return match(preferredLanguages, supportedLngs, defaultLocale);
-  } catch (_error) {
+  } catch (e) {
     return defaultLocale;
   }
 }

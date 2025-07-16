@@ -19,7 +19,7 @@ import { Trans } from "@/components/trans";
 import { useTranslation } from "@/i18n/client";
 
 import { usePoll } from "../../poll-context";
-import { toggleVote, VoteSelector } from "../vote-selector";
+import { VoteSelector, toggleVote } from "../vote-selector";
 
 export interface ParticipantRowFormProps {
   name?: string;
@@ -62,7 +62,7 @@ const ParticipantRowForm = ({
         <div className="flex items-center justify-between gap-x-2.5">
           <Participant>
             {name ? (
-              <OptimizedAvatarImage name={participantName} size="sm" />
+              <OptimizedAvatarImage name={participantName} size="xs" />
             ) : (
               <YouAvatar />
             )}
@@ -114,7 +114,6 @@ const ParticipantRowForm = ({
               name={`votes.${i}`}
               render={({ field }) => (
                 // biome-ignore lint/a11y/useKeyWithClickEvents: Fix later
-                // biome-ignore lint/a11y/noStaticElementInteractions: Fix later
                 <div
                   onClick={() => {
                     field.onChange({

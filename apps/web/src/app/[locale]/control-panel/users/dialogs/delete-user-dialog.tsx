@@ -1,4 +1,6 @@
 "use client";
+import { Trans } from "@/components/trans";
+import { useTranslation } from "@/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rallly/ui/button";
 import {
@@ -20,12 +22,11 @@ import {
   FormMessage,
 } from "@rallly/ui/form";
 import { Input } from "@rallly/ui/input";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Trans } from "@/components/trans";
-import { useSafeAction } from "@/features/safe-action/client";
-import { deleteUserAction } from "@/features/user/actions";
-import { useTranslation } from "@/i18n/client";
+import { deleteUser } from "../actions";
 
 const useSchema = (email: string) => {
   const { t } = useTranslation();
@@ -52,20 +53,15 @@ export function DeleteUserDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const router = useRouter();
   const schema = useSchema(email);
+  const [isPending, startTransition] = useTransition();
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       email: "",
     },
   });
-
-  const deleteUser = useSafeAction(deleteUserAction, {
-    onSuccess: () => {
-      onOpenChange(false);
-    },
-  });
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -82,8 +78,12 @@ export function DeleteUserDialog({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(async () => {
-              await deleteUser.executeAsync({ userId });
+            onSubmit={form.handleSubmit(async (data) => {
+              startTransition(async () => {
+                await deleteUser({ userId, email: data.email });
+                router.refresh();
+                onOpenChange(false);
+              });
             })}
           >
             <FormField
@@ -117,11 +117,7 @@ export function DeleteUserDialog({
                   <Trans i18nKey="cancel" defaults="Cancel" />
                 </Button>
               </DialogClose>
-              <Button
-                variant="destructive"
-                loading={deleteUser.isExecuting}
-                type="submit"
-              >
+              <Button variant="destructive" loading={isPending} type="submit">
                 <Trans i18nKey="delete" defaults="Delete" />
               </Button>
             </DialogFooter>

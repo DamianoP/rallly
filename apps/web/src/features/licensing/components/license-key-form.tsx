@@ -1,5 +1,7 @@
 "use client";
 
+import { Trans } from "@/components/trans";
+import { useTranslation } from "@/i18n/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@rallly/ui/button";
 import {
@@ -14,8 +16,6 @@ import { Input } from "@rallly/ui/input";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Trans } from "@/components/trans";
-import { useTranslation } from "@/i18n/client";
 import { validateLicenseKey } from "../actions/validate-license";
 import { checkLicenseKey } from "../helpers/check-license-key";
 
@@ -68,7 +68,7 @@ export function LicenseKeyForm() {
         }
         return;
       }
-    } catch (_error) {
+    } catch (error) {
       form.setError("licenseKey", {
         message: t("licenseKeyGenericError", {
           defaultValue: "An error occurred while validating the license key",

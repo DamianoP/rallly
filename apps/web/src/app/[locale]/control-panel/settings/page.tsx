@@ -1,4 +1,3 @@
-import { SettingsIcon } from "lucide-react";
 import { PageIcon } from "@/app/components/page-icons";
 import {
   FullWidthLayout,
@@ -7,13 +6,11 @@ import {
   FullWidthLayoutTitle,
 } from "@/components/full-width-layout";
 import { Trans } from "@/components/trans";
-import { loadAdminUserAbility } from "@/data/user";
 import { getInstanceSettings } from "@/features/instance-settings/queries";
+import { SettingsIcon } from "lucide-react";
 import { InstanceSettingsForm } from "./instance-settings-form";
 
 async function loadData() {
-  await loadAdminUserAbility();
-
   const instanceSettings = await getInstanceSettings();
 
   return {

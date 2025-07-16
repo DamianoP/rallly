@@ -1,19 +1,18 @@
 "use client";
-
-import { cn } from "@rallly/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@rallly/ui/page-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
-import React from "react";
+
 import { Trans } from "@/components/trans";
-import { statusSchema } from "./schema";
+
+import { cn } from "@rallly/ui";
+import React from "react";
 
 export function PollsTabbedView({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const name = "status";
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
-  const status = statusSchema.parse(searchParams.get("status"));
-  const [tab, setTab] = React.useState(status);
+  const [tab, setTab] = React.useState(searchParams.get(name) ?? "live");
   const handleTabChange = React.useCallback(
     (value: string) => {
       const params = new URLSearchParams(searchParams);
@@ -21,7 +20,7 @@ export function PollsTabbedView({ children }: { children: React.ReactNode }) {
 
       params.delete("page");
 
-      setTab(statusSchema.parse(value));
+      setTab(value);
 
       startTransition(() => {
         const newUrl = `?${params.toString()}`;

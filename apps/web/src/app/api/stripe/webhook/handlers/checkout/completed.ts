@@ -1,11 +1,11 @@
+import { env } from "@/env";
+import { licensingClient } from "@/features/licensing/client";
+import { licenseCheckoutMetadataSchema } from "@/features/licensing/schema";
+import { subscriptionCheckoutMetadataSchema } from "@/features/subscription/schema";
+import { getEmailClient } from "@/utils/emails";
 import type { Stripe } from "@rallly/billing";
 import { stripe } from "@rallly/billing";
 import { posthog } from "@rallly/posthog/server";
-import { env } from "@/env";
-import { licenseCheckoutMetadataSchema } from "@/features/licensing/schema";
-import { licenseManager } from "@/features/licensing/server";
-import { subscriptionCheckoutMetadataSchema } from "@/features/subscription/schema";
-import { getEmailClient } from "@/utils/emails";
 
 async function handleSubscriptionCheckoutSessionCompleted(
   checkoutSession: Stripe.Checkout.Session,
@@ -61,25 +61,12 @@ async function handleSelfHostedCheckoutSessionCompleted(
     );
   }
 
-  const license = await licenseManager.createLicense({
+  const license = await licensingClient.createLicense({
     type: licenseType,
     licenseeEmail: email,
     licenseeName: customerDetails.name ?? undefined,
     version,
     seats,
-  });
-
-  posthog?.capture({
-    distinctId: email,
-    event: "license_purchase",
-    properties: {
-      licenseType,
-      seats,
-      version,
-      $set: {
-        tier: licenseType,
-      },
-    },
   });
 
   if (!license || !license.data) {
@@ -90,7 +77,7 @@ async function handleSelfHostedCheckoutSessionCompleted(
 
   const emailClient = getEmailClient();
 
-  await emailClient.sendTemplate("LicenseKeyEmail", {
+  emailClient.sendTemplate("LicenseKeyEmail", {
     to: email,
     from: {
       name: "Luke from Rallly",

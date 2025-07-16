@@ -1,9 +1,10 @@
 "use client";
 
-import { Badge } from "@rallly/ui/badge";
 import { CalendarIcon } from "lucide-react";
+
 import { AddToCalendarButton } from "@/components/add-to-calendar-button";
 import { ParticipantAvatarBar } from "@/components/participant-avatar-bar";
+import { useVisibleParticipants } from "@/components/participants-provider";
 import { Trans } from "@/components/trans";
 import { IfParticipantsVisible } from "@/components/visibility";
 import { usePoll } from "@/contexts/poll";
@@ -48,8 +49,15 @@ function FinalTime({ start, duration }: { start: Date; duration: number }) {
 }
 
 function useAttendees() {
+  const participants = useVisibleParticipants();
   const poll = usePoll();
-  return poll.event?.attendees ?? [];
+  return participants.filter((participant) =>
+    participant.votes.some(
+      (vote) =>
+        vote.optionId === poll?.event?.optionId &&
+        (vote.type === "yes" || vote.type === "ifNeedBe"),
+    ),
+  );
 }
 
 function Attendees() {
@@ -92,11 +100,6 @@ export function ScheduledEvent() {
                 </div>
               </div>
             </div>
-            {event.status === "canceled" && (
-              <Badge>
-                <Trans i18nKey="canceled" defaults="Canceled" />
-              </Badge>
-            )}
           </div>
           <div className="flex items-center gap-4">
             <IfParticipantsVisible>
@@ -114,8 +117,8 @@ export function ScheduledEvent() {
                   : undefined
               }
               guests={attendees
-                .filter((attendee) => !!attendee.email)
-                .map((attendee) => attendee.email as string)}
+                .filter((participant) => !!participant.email)
+                .map((participant) => participant.email as string)}
             />
           </div>
         </div>

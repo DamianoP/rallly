@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Trans } from "react-i18next/TransWithoutContext";
 
-import { getInstanceSettings } from "@/features/instance-settings/queries";
 import { getTranslation } from "@/i18n/server";
+
+import { getInstanceSettings } from "@/features/instance-settings/queries";
+import { notFound } from "next/navigation";
 import {
   AuthPageContainer,
   AuthPageContent,
@@ -12,7 +13,6 @@ import {
   AuthPageHeader,
   AuthPageTitle,
 } from "../components/auth-page";
-import { LinkWithRedirectTo } from "../components/link-with-redirect-to";
 import { RegisterNameForm } from "./components/register-name-form";
 
 export default async function Register(props: {
@@ -56,7 +56,7 @@ export default async function Register(props: {
           i18nKey="alreadyHaveAccount"
           defaults="Already have an account? <a>Log in</a>"
           components={{
-            a: <LinkWithRedirectTo className="text-link" href="/login" />,
+            a: <Link className="text-link" href="/login" />,
           }}
         />
       </AuthPageExternal>
@@ -66,7 +66,7 @@ export default async function Register(props: {
 
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+}) {
   const params = await props.params;
   const { t } = await getTranslation(params.locale);
   return {

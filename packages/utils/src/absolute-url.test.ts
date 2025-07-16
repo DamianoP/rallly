@@ -7,6 +7,7 @@ describe("absoluteUrl", () => {
     });
 
     afterAll(() => {
+      // biome-ignore lint/performance/noDelete: Setting to undefined doesn't work
       delete process.env.NEXT_PUBLIC_BASE_URL;
     });
 

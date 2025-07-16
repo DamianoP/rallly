@@ -10,7 +10,7 @@ import {
 import { Trans } from "react-i18next/TransWithoutContext";
 
 import type { EmailContext } from "../types";
-import { darkTextColor, fontFamily, Link, Text } from "./styled-components";
+import { Link, Text, darkTextColor, fontFamily } from "./styled-components";
 
 export interface EmailLayoutProps {
   preview: string;
@@ -58,7 +58,7 @@ export const EmailLayout = ({
                   t={ctx.t}
                   i18nKey="common_poweredBy"
                   ns="emails"
-                  defaults="Powered by <a>{domain}</a>"
+                  defaults="Powered by <a>{{domain}}</a>"
                   values={{ domain: "rallly.co" }}
                   components={{
                     a: (

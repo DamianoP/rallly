@@ -9,17 +9,12 @@ export function getPosthogBootstrapCookie(bootstrapData: {
     return;
   }
 
-  const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN
-    ? `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`
-    : undefined;
-
   return {
     name: POSTHOG_BOOTSTAP_DATA_COOKIE_NAME,
     value: JSON.stringify(bootstrapData),
     httpOnly: false,
-    secure: process.env.NEXT_PUBLIC_BASE_URL?.startsWith("https://") ?? false,
+    secure: true,
     sameSite: "lax" as const,
     path: "/",
-    domain,
   };
 }

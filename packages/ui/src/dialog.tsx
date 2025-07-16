@@ -1,11 +1,11 @@
 "use client";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Slot } from "@radix-ui/react-slot";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { XIcon } from "lucide-react";
 import * as React from "react";
+
 import { Button } from "./button";
 import { Icon } from "./icon";
 import { cn } from "./lib/utils";
@@ -37,7 +37,7 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const dialogContentVariants = cva(
   cn(
     //style
-    "gap-4 bg-background p-4 shadow-lg sm:rounded-xl",
+    "gap-4 bg-background p-4 shadow-lg sm:rounded-lg sm:border",
     // position
     "-translate-x-1/2 fixed top-0 left-1/2 z-50 grid w-full",
     // animation
@@ -51,7 +51,6 @@ const dialogContentVariants = cva(
           "data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-top-[48%] sm:top-[50%] sm:translate-y-[-50%]",
       },
       size: {
-        xs: "sm:max-w-[400px]",
         sm: "sm:max-w-sm",
         md: "sm:max-w-md",
         lg: "sm:max-w-lg",
@@ -88,7 +87,7 @@ const DialogContent = React.forwardRef<
       >
         {children}
         {!hideCloseButton ? (
-          <DialogClose asChild className="absolute top-2 right-2">
+          <DialogClose asChild className="absolute top-4 right-4">
             <Button size="icon" variant="ghost">
               <Icon>
                 <XIcon />
@@ -105,20 +104,9 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({
   className,
-  icon,
-  children,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-  icon?: React.ReactNode;
-}) => (
-  <div className={cn("flex flex-col gap-4", className)} {...props}>
-    {icon ? (
-      <span className="inline-flex size-8 items-center justify-center rounded-lg bg-primary-foreground text-primary">
-        <Slot className="size-4">{icon}</Slot>
-      </span>
-    ) : null}
-    <div>{children}</div>
-  </div>
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("flex flex-col space-y-1.5", className)} {...props} />
 );
 DialogHeader.displayName = "DialogHeader";
 
@@ -128,7 +116,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "mt-2 flex flex-col-reverse sm:flex-row sm:space-x-2",
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       className,
     )}
     {...props}
@@ -157,7 +145,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("mt-2 text-muted-foreground text-sm", className)}
+    className={cn("text-muted-foreground text-sm", className)}
     {...props}
   />
 ));

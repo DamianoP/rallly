@@ -1,5 +1,4 @@
 import { Button } from "@rallly/ui/button";
-import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -56,7 +55,7 @@ export default async function VerifyPage() {
 
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+}) {
   const params = await props.params;
   const { t } = await getTranslation(params.locale);
   return {

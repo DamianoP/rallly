@@ -1,4 +1,4 @@
-import "server-only";
+"server-only";
 
 import { Ratelimit } from "@upstash/ratelimit";
 import { kv } from "@vercel/kv";
@@ -8,8 +8,8 @@ import { auth } from "@/next-auth";
 
 import { isRateLimitEnabled } from "./constants";
 
-export type Unit = "ms" | "s" | "m" | "h" | "d";
-export type Duration = `${number} ${Unit}` | `${number}${Unit}`;
+type Unit = "ms" | "s" | "m" | "h" | "d";
+type Duration = `${number} ${Unit}` | `${number}${Unit}`;
 
 async function getIPAddress() {
   return (await headers()).get("x-forwarded-for");

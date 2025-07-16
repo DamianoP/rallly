@@ -1,7 +1,9 @@
 import { usePostHog } from "@rallly/posthog/client";
-import { toast } from "@rallly/ui/sonner";
+import { useToast } from "@rallly/ui/hooks/use-toast";
+
 import { usePoll } from "@/components/poll-context";
 import { trpc } from "@/trpc/client";
+
 import type { ParticipantForm } from "./types";
 
 export const normalizeVotes = (
@@ -79,6 +81,7 @@ export const useDeleteParticipantMutation = () => {
 
 export const useUpdatePollMutation = () => {
   const posthog = usePostHog();
+  const { toast } = useToast();
   return trpc.polls.update.useMutation({
     onSuccess: (_data, { urlId }) => {
       posthog?.capture("updated poll", {
@@ -87,7 +90,10 @@ export const useUpdatePollMutation = () => {
     },
     onError: (error) => {
       if (error.data?.code === "BAD_REQUEST") {
-        toast.error(error.message);
+        toast({
+          title: "Error",
+          description: error.message,
+        });
       }
     },
   });

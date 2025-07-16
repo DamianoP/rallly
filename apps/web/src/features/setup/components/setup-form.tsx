@@ -11,18 +11,17 @@ import {
   FormMessage,
 } from "@rallly/ui/form";
 import { Input } from "@rallly/ui/input";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 
 import { LanguageSelect } from "@/components/poll/language-selector";
 import { TimeZoneSelect } from "@/components/time-zone-picker/time-zone-select";
 import { Trans } from "@/components/trans";
-import { useSafeAction } from "@/features/safe-action/client";
 import { useTimezone } from "@/features/timezone";
 import { useTranslation } from "@/i18n/client";
 
-import { completeSetupAction } from "../actions";
-import type { SetupFormValues } from "../schema";
-import { setupSchema } from "../schema";
+import { updateUserSetup } from "../actions";
+import { type SetupFormValues, setupSchema } from "../schema";
 
 interface SetupFormProps {
   defaultValues?: Partial<SetupFormValues>;
@@ -31,8 +30,8 @@ interface SetupFormProps {
 export function SetupForm({ defaultValues }: SetupFormProps) {
   const { timezone } = useTimezone();
   const { i18n } = useTranslation();
-  const completeSetup = useSafeAction(completeSetupAction);
-
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [serverError, setServerError] = React.useState<string | null>(null);
   const form = useForm<SetupFormValues>({
     resolver: zodResolver(setupSchema),
     defaultValues: {
@@ -42,13 +41,33 @@ export function SetupForm({ defaultValues }: SetupFormProps) {
     },
   });
 
+  async function onSubmit(data: SetupFormValues) {
+    setIsSubmitting(true);
+    setServerError(null);
+
+    // Construct FormData for the server action
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("timeZone", data.timeZone);
+    formData.append("locale", data.locale);
+
+    const result = await updateUserSetup(formData);
+
+    setIsSubmitting(false);
+
+    if (result?.message) {
+      setServerError(result.message);
+    }
+  }
+
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(async (data) => {
-          await completeSetup.executeAsync(data);
-        })}
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        {serverError && (
+          <p aria-live="polite" className="text-destructive text-sm">
+            {serverError}
+          </p>
+        )}
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -109,15 +128,12 @@ export function SetupForm({ defaultValues }: SetupFormProps) {
               </FormItem>
             )}
           />
-          {completeSetup.result.serverError && (
-            <FormMessage>{completeSetup.result.serverError}</FormMessage>
-          )}
         </div>
         <div className="mt-6">
           <Button
             variant="primary"
             type="submit"
-            loading={form.formState.isSubmitting}
+            loading={isSubmitting}
             className="w-full"
           >
             <Trans i18nKey="save" defaults="Save" />

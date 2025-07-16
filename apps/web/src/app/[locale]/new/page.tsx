@@ -1,14 +1,14 @@
 import { Button } from "@rallly/ui/button";
-import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PollPageIcon } from "@/app/components/page-icons";
 import { CreatePoll } from "@/components/create-poll";
 import { Trans } from "@/components/trans";
 import { UserDropdown } from "@/components/user-dropdown";
-import { getInstanceSettings } from "@/features/instance-settings/queries";
 import { getTranslation } from "@/i18n/server";
 import { getLoggedIn } from "@/next-auth";
+
+import { getInstanceSettings } from "@/features/instance-settings/queries";
 import { BackButton } from "./back-button";
 
 export default async function Page() {
@@ -23,7 +23,7 @@ export default async function Page() {
             <BackButton />
           </div>
           <div className="flex flex-1 sm:justify-center">
-            <div className="flex items-center gap-x-3">
+            <div className="flex items-center gap-x-2">
               <PollPageIcon size="sm" />
               <div className="flex items-baseline gap-x-8">
                 <h1 className="font-semibold">
@@ -67,7 +67,7 @@ export default async function Page() {
 
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+}) {
   const params = await props.params;
   const { t } = await getTranslation(params.locale);
   return {

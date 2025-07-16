@@ -1,16 +1,5 @@
-import { Button } from "@rallly/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@rallly/ui/dialog";
-import { Icon } from "@rallly/ui/icon";
-import dayjs from "dayjs";
-import { KeySquareIcon, PlusIcon, ShoppingBagIcon } from "lucide-react";
-import type { Metadata } from "next";
 import { PageIcon } from "@/app/components/page-icons";
+import { requireAdmin } from "@/auth/queries";
 import {
   EmptyState,
   EmptyStateDescription,
@@ -25,17 +14,25 @@ import {
   FullWidthLayoutTitle,
 } from "@/components/full-width-layout";
 import { Trans } from "@/components/trans";
-import { loadInstanceLicense } from "@/data/instance-license";
-import { loadAdminUserAbility } from "@/data/user";
 import { LicenseKeyForm } from "@/features/licensing/components/license-key-form";
 import { RemoveLicenseButton } from "@/features/licensing/components/remove-license-button";
+import { getLicense } from "@/features/licensing/queries";
 import { getTranslation } from "@/i18n/server";
+import { Button } from "@rallly/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@rallly/ui/dialog";
+import { Icon } from "@rallly/ui/icon";
+import dayjs from "dayjs";
+import { KeySquareIcon, PlusIcon, ShoppingBagIcon } from "lucide-react";
 
 async function loadData() {
-  const [_, license] = await Promise.all([
-    loadAdminUserAbility(),
-    loadInstanceLicense(),
-  ]);
+  await requireAdmin();
+  const license = await getLicense();
   return { license };
 }
 
@@ -43,11 +40,19 @@ function DescriptionList({ children }: { children: React.ReactNode }) {
   return <dl>{children}</dl>;
 }
 
-function DescriptionListTitle({ children }: { children: React.ReactNode }) {
+function DescriptionListTitle({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <dt className="mb-1 text-muted-foreground text-xs">{children}</dt>;
 }
 
-function DescriptionListValue({ children }: { children: React.ReactNode }) {
+function DescriptionListValue({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <dd className="mb-4 font-mono text-sm">{children}</dd>;
 }
 
@@ -115,7 +120,7 @@ export default async function LicensePage() {
               </DescriptionListValue>
             </DescriptionList>
             <div className="mt-6">
-              <RemoveLicenseButton />
+              <RemoveLicenseButton licenseId={license.id} />
             </div>
           </div>
         ) : (
@@ -177,7 +182,7 @@ export default async function LicensePage() {
   );
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata() {
   const { t } = await getTranslation();
   return {
     title: t("license", {

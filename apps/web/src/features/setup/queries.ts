@@ -2,11 +2,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
-import { loadUserAbility } from "@/data/user";
+import { requireUser } from "@/auth/queries";
 import { onboardedUserSchema } from "./schema";
 
 export const getOnboardedUser = cache(async () => {
-  const { user } = await loadUserAbility();
+  const user = await requireUser();
 
   const onboardedUser = onboardedUserSchema.safeParse(user);
 

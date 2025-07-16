@@ -1,6 +1,5 @@
 import type { Stripe } from "@rallly/billing";
-import type { Prisma } from "@rallly/database";
-import { prisma } from "@rallly/database";
+import { type Prisma, prisma } from "@rallly/database";
 
 export async function onPaymentMethodUpdated(event: Stripe.Event) {
   const paymentMethod = event.data.object as Stripe.PaymentMethod;

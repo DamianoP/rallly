@@ -1,7 +1,7 @@
 {
   "name": "rallly",
   "private": true,
-  "version": "4.2.0",
+  "version": "4.1.0",
   "scripts": {
     "dev": "turbo dev --filter=@rallly/web",
     "dev:emails": "turbo dev --filter=@rallly/emails",
@@ -34,12 +34,12 @@
     "schema": "./packages/database/prisma"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.1.1",
+    "@biomejs/biome": "1.9.4",
     "@playwright/test": "^1.52.0",
     "dotenv-cli": "^8.0.0",
     "prettier": "^3.5.3",
     "prisma": "^6.8.2",
-    "turbo": "^2.5.4",
+    "turbo": "^2.4.4",
     "typescript": "^5.8.2",
     "vitest": "^2.1.9"
   },

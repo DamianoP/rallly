@@ -49,20 +49,15 @@ model User {
   bannedAt      DateTime?   @map("banned_at")
   banReason     String?     @map("ban_reason")
   role          UserRole    @default(user)
-  activeSpaceId String?     @map("active_space_id")
 
-  comments       Comment[]
-  polls          Poll[]
-  watcher        Watcher[]
-  accounts       Account[]
-  participants   Participant[]
-  paymentMethods PaymentMethod[]
-  subscription   Subscription?   @relation("UserToSubscription")
-  activeSpace    Space?          @relation("UserActiveSpace", fields: [activeSpaceId], references: [id], onDelete: SetNull)
-
-  spaces   Space[]       @relation("UserSpaces")
-  memberOf SpaceMember[]
-
+  comments              Comment[]
+  polls                 Poll[]
+  watcher               Watcher[]
+  events                Event[]
+  accounts              Account[]
+  participants          Participant[]
+  paymentMethods        PaymentMethod[]
+  subscription          Subscription?          @relation("UserToSubscription")
   pollViews             PollView[]
   scheduledEvents       ScheduledEvent[]
   scheduledEventInvites ScheduledEventInvite[]

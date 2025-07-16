@@ -19,9 +19,9 @@ import { TimesShownIn } from "@/components/clock";
 import { OptimizedAvatarImage } from "@/components/optimized-avatar-image";
 import { Participant, ParticipantName } from "@/components/participant";
 import { ParticipantDropdown } from "@/components/participant-dropdown";
+import { useOptions, usePoll } from "@/components/poll-context";
 import { useVotingForm } from "@/components/poll/voting-form";
 import { YouAvatar } from "@/components/poll/you-avatar";
-import { useOptions, usePoll } from "@/components/poll-context";
 import { Trans } from "@/components/trans";
 import { usePermissions } from "@/contexts/permissions";
 import { useTranslation } from "@/i18n/client";
@@ -81,8 +81,10 @@ const MobilePoll: React.FunctionComponent = () => {
               }}
               disabled={isEditing}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue />
+              <SelectTrigger asChild className="w-full">
+                <Button>
+                  <SelectValue />
+                </Button>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">
@@ -102,7 +104,7 @@ const MobilePoll: React.FunctionComponent = () => {
                 {visibleParticipants.map((participant) => (
                   <SelectItem key={participant.id} value={participant.id}>
                     <Participant>
-                      <OptimizedAvatarImage name={participant.name} size="sm" />
+                      <OptimizedAvatarImage name={participant.name} size="xs" />
                       <ParticipantName>{participant.name}</ParticipantName>
                       {session.ownsObject(participant) && (
                         <Badge>

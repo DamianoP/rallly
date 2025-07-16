@@ -48,7 +48,7 @@ export const UserDropdown = ({ className }: { className?: string }) => {
           <OptimizedAvatarImage
             src={user.image ?? undefined}
             name={user.name}
-            size="sm"
+            size="xs"
           />
           <span className="truncate">{user.name}</span>
           <Icon>
@@ -76,7 +76,10 @@ export const UserDropdown = ({ className }: { className?: string }) => {
         </DropdownMenuItem>
         <IfAuthenticated>
           <DropdownMenuItem asChild={true}>
-            <Link href="/account/profile" className="flex items-center gap-x-2">
+            <Link
+              href="/settings/profile"
+              className="flex items-center gap-x-2"
+            >
               <UserIcon className="size-4 text-muted-foreground" />
               <Trans i18nKey="profile" defaults="Profile" />
             </Link>
@@ -84,7 +87,7 @@ export const UserDropdown = ({ className }: { className?: string }) => {
         </IfAuthenticated>
         <DropdownMenuItem asChild={true}>
           <Link
-            href="/account/preferences"
+            href="/settings/preferences"
             className="flex items-center gap-x-2"
           >
             <Settings2Icon className="size-4 text-muted-foreground" />
@@ -93,7 +96,10 @@ export const UserDropdown = ({ className }: { className?: string }) => {
         </DropdownMenuItem>
         <IfCloudHosted>
           <DropdownMenuItem asChild={true}>
-            <Link href="/account/billing" className="flex items-center gap-x-2">
+            <Link
+              href="/settings/billing"
+              className="flex items-center gap-x-2"
+            >
               <CreditCardIcon className="size-4 text-muted-foreground" />
               <Trans i18nKey="Billing" defaults="Billing" />
             </Link>

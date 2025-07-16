@@ -1,12 +1,13 @@
 "use client";
 
-import { toast } from "@rallly/ui/sonner";
+import { useToast } from "@rallly/ui/hooks/use-toast";
 import Cookies from "js-cookie";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 export function UnsubscribeAlert() {
+  const { toast } = useToast();
   const { t } = useTranslation("app");
 
   const urlId = useParams<{ urlId: string }>()?.urlId;
@@ -17,19 +18,17 @@ export function UnsubscribeAlert() {
     const unsubscribed = Cookies.get(cookieName);
     if (unsubscribed) {
       Cookies.remove(cookieName);
-      toast.message(
-        t("unsubscribeToastTitle", {
+      toast({
+        title: t("unsubscribeToastTitle", {
           defaultValue: "You have disabled notifications",
         }),
-        {
-          description: t("unsubscribeToastDescription", {
-            defaultValue:
-              "You will no longer receive notifications for this poll",
-          }),
-        },
-      );
+        description: t("unsubscribeToastDescription", {
+          defaultValue:
+            "You will no longer receive notifications for this poll",
+        }),
+      });
     }
-  }, [t, urlId]);
+  }, [t, toast, urlId]);
 
   return null;
 }

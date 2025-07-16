@@ -1,5 +1,5 @@
 import { CalendarIcon } from "lucide-react";
-import type { Metadata } from "next";
+
 import type { Params } from "@/app/[locale]/types";
 import { EventPageIcon } from "@/app/components/page-icons";
 import {
@@ -19,11 +19,13 @@ import {
 import { Pagination } from "@/components/pagination";
 import { StackedList, StackedListItem } from "@/components/stacked-list";
 import { Trans } from "@/components/trans";
-import { loadScheduledEvents } from "@/data/event";
+import { getScheduledEvents } from "@/features/scheduled-event/api/get-scheduled-events";
 import { ScheduledEventListItem } from "@/features/scheduled-event/components/scheduled-event-list";
 import type { Status } from "@/features/scheduled-event/schema";
 import { statusSchema } from "@/features/scheduled-event/schema";
 import { getTranslation } from "@/i18n/server";
+import { requireUser } from "@/next-auth";
+
 import { EventsTabbedView } from "./events-tabbed-view";
 
 async function loadData({
@@ -37,7 +39,9 @@ async function loadData({
   page?: number;
   pageSize?: number;
 }) {
-  return loadScheduledEvents({
+  const { userId } = await requireUser();
+  return getScheduledEvents({
+    userId,
     status,
     search,
     page,
@@ -151,13 +155,13 @@ export default async function Page(props: {
                       <ScheduledEventListItem
                         eventId={event.id}
                         key={event.id}
-                        floating={!event.timeZone}
+                        floating={event.timeZone === null}
                         title={event.title}
                         start={event.start}
                         end={event.end}
+                        status={event.status}
                         allDay={event.allDay}
                         invites={event.invites}
-                        status={event.status}
                       />
                     </StackedListItem>
                   ))}
@@ -179,7 +183,7 @@ export default async function Page(props: {
   );
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata() {
   const { t } = await getTranslation();
   return {
     title: t("events", {

@@ -8,10 +8,11 @@ import dayjs from "dayjs";
 import * as ics from "ics";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+
 import { moderateContent } from "@/features/moderation";
-import { formatEventDateTime } from "@/features/scheduled-event/utils";
-import { getActiveSpace } from "@/features/spaces/api";
 import { getEmailClient } from "@/utils/emails";
+
+import { getTimeZoneAbbreviation } from "../../utils/date";
 import {
   createRateLimitMiddleware,
   possiblyPublicProcedure,
@@ -118,7 +119,7 @@ export const polls = router({
         },
       });
 
-      let nextCursor: typeof cursor | undefined;
+      let nextCursor: typeof cursor | undefined = undefined;
       if (polls.length > input.limit) {
         const nextItem = polls.pop();
         nextCursor = nextItem?.id;
@@ -178,12 +179,6 @@ export const polls = router({
       const adminToken = nanoid();
       const participantUrlId = nanoid();
       const pollId = nanoid();
-      let spaceId: string | undefined;
-
-      if (!ctx.user.isGuest) {
-        const space = await getActiveSpace();
-        spaceId = space.id;
-      }
 
       const poll = await prisma.poll.create({
         select: {
@@ -233,7 +228,6 @@ export const polls = router({
           disableComments: input.disableComments,
           hideScores: input.hideScores,
           requireParticipantEmail: input.requireParticipantEmail,
-          spaceId,
         },
       });
 
@@ -467,26 +461,16 @@ export const polls = router({
           userId: true,
           guestId: true,
           deleted: true,
+          event: {
+            select: {
+              start: true,
+              duration: true,
+              optionId: true,
+            },
+          },
           watchers: {
             select: {
               userId: true,
-            },
-          },
-          scheduledEvent: {
-            select: {
-              start: true,
-              end: true,
-              allDay: true,
-              status: true,
-              invites: {
-                select: {
-                  id: true,
-                  inviteeName: true,
-                  inviteeEmail: true,
-                  inviteeTimeZone: true,
-                  status: true,
-                },
-              },
             },
           },
         },
@@ -506,37 +490,10 @@ export const polls = router({
         ? userId === res.guestId
         : userId === res.userId;
 
-      const event = res.scheduledEvent
-        ? {
-            start: res.scheduledEvent.start,
-            duration: res.scheduledEvent.allDay
-              ? 0
-              : dayjs(res.scheduledEvent.end).diff(
-                  dayjs(res.scheduledEvent.start),
-                  "minute",
-                ),
-            attendees: res.scheduledEvent.invites
-              .map((invite) => ({
-                name: invite.inviteeName,
-                email: invite.inviteeEmail,
-                status: invite.status,
-              }))
-              .filter(
-                (invite) =>
-                  invite.status === "accepted" || invite.status === "tentative",
-              ),
-            status: res.scheduledEvent.status,
-          }
-        : null;
-
       if (isOwner || res.adminUrlId === input.adminToken) {
-        return {
-          ...res,
-          inviteLink,
-          event,
-        };
+        return { ...res, inviteLink };
       } else {
-        return { ...res, adminUrlId: "", inviteLink, event };
+        return { ...res, adminUrlId: "", inviteLink };
       }
     }),
   book: proProcedure
@@ -559,7 +516,6 @@ export const polls = router({
           title: true,
           location: true,
           description: true,
-          spaceId: true,
           user: {
             select: {
               name: true,
@@ -572,7 +528,6 @@ export const polls = router({
               name: true,
               email: true,
               locale: true,
-              timeZone: true,
               user: {
                 select: {
                   email: true,
@@ -630,65 +585,57 @@ export const polls = router({
         eventStart = eventStart.utc();
       }
 
-      const { spaceId } = poll;
-
-      if (!spaceId) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Poll has no space",
-        });
-      }
-
-      const scheduledEvent = await prisma.$transaction(async (tx) => {
-        // create scheduled event
-        const event = await tx.scheduledEvent.create({
-          data: {
-            start: eventStart.toDate(),
-            end: eventStart.add(option.duration, "minute").toDate(),
-            title: poll.title,
-            location: poll.location,
-            timeZone: poll.timeZone,
-            userId: ctx.user.id,
-            spaceId,
-            allDay: option.duration === 0,
-            status: "confirmed",
-            invites: {
-              createMany: {
-                data: poll.participants
-                  .filter((p) => p.email || p.user?.email) // Filter out participants without email
-                  .map((p) => ({
-                    inviteeName: p.name,
-                    inviteeEmail:
-                      p.user?.email ?? p.email ?? `${p.id}@rallly.co`,
-                    inviteeTimeZone:
-                      p.user?.timeZone ?? p.timeZone ?? poll.timeZone,
-                    status: (
-                      {
-                        yes: "accepted",
-                        ifNeedBe: "tentative",
-                        no: "declined",
-                      } as const
-                    )[
-                      p.votes.find((v) => v.optionId === input.optionId)
-                        ?.type ?? "no"
-                    ],
-                  })),
+      await prisma.poll.update({
+        where: {
+          id: input.pollId,
+        },
+        data: {
+          status: "finalized",
+          scheduledEvent: {
+            create: {
+              id: input.pollId,
+              start: eventStart.toDate(),
+              end: eventStart.add(option.duration, "minute").toDate(),
+              title: poll.title,
+              location: poll.location,
+              timeZone: poll.timeZone,
+              userId: ctx.user.id,
+              allDay: option.duration === 0,
+              status: "confirmed",
+              invites: {
+                createMany: {
+                  data: poll.participants
+                    .filter((p) => p.email || p.user?.email) // Filter out participants without email
+                    .map((p) => ({
+                      inviteeName: p.name,
+                      inviteeEmail:
+                        p.user?.email ?? p.email ?? `${p.id}@rallly.co`,
+                      inviteeTimeZone: p.user?.timeZone ?? poll.timeZone, // We should track participant's timezone
+                      status: (
+                        {
+                          yes: "accepted",
+                          ifNeedBe: "tentative",
+                          no: "declined",
+                        } as const
+                      )[
+                        p.votes.find((v) => v.optionId === input.optionId)
+                          ?.type ?? "no"
+                      ],
+                    })),
+                },
               },
             },
           },
-        });
-        // update poll status
-        await tx.poll.update({
-          where: {
-            id: poll.id,
+          event: {
+            create: {
+              optionId: input.optionId,
+              start: eventStart.toDate(),
+              duration: option.duration,
+              title: poll.title,
+              userId: ctx.user.id,
+            },
           },
-          data: {
-            status: "finalized",
-            scheduledEventId: event.id,
-          },
-        });
-
-        return event;
+        },
       });
 
       const attendees = poll.participants.filter((p) =>
@@ -709,8 +656,6 @@ export const polls = router({
           : eventStart.add(1, "day");
 
       const event = ics.createEvent({
-        uid: scheduledEvent.id,
-        sequence: 0, // TODO: Get sequence from database
         title: poll.title,
         location: poll.location ?? undefined,
         description: poll.description ?? undefined,
@@ -754,45 +699,51 @@ export const polls = router({
           message: "Failed to generate ics",
         });
       } else {
+        const timeZoneAbbrev = poll.timeZone
+          ? getTimeZoneAbbreviation(eventStart.toDate(), poll.timeZone)
+          : "";
+        const date = eventStart.format("dddd, MMMM D, YYYY");
+        const day = eventStart.format("D");
+        const dow = eventStart.format("ddd");
+        const startTime = eventStart.format("hh:mm A");
+        const endTime = eventEnd.format("hh:mm A");
+
+        const time =
+          option.duration > 0
+            ? `${startTime} - ${endTime} ${timeZoneAbbrev}`
+            : "All-day";
+
         const participantsToEmail: Array<{
           name: string;
           email: string;
           locale: string | undefined;
-          timeZone: string | null;
         }> = [];
 
         if (input.notify === "all") {
+          // biome-ignore lint/complexity/noForEach: Fix this later
           poll.participants.forEach((p) => {
             if (p.email) {
               participantsToEmail.push({
                 name: p.name,
                 email: p.email,
                 locale: p.locale ?? undefined,
-                timeZone: p.timeZone,
               });
             }
           });
         }
 
         if (input.notify === "attendees") {
+          // biome-ignore lint/complexity/noForEach: Fix this later
           attendees.forEach((p) => {
             if (p.email) {
               participantsToEmail.push({
                 name: p.name,
                 email: p.email,
                 locale: p.locale ?? undefined,
-                timeZone: p.timeZone,
               });
             }
           });
         }
-
-        const { date, day, dow, time } = formatEventDateTime({
-          start: scheduledEvent.start,
-          end: scheduledEvent.end,
-          allDay: scheduledEvent.allDay,
-          timeZone: scheduledEvent.timeZone,
-        });
 
         ctx.user.getEmailClient().queueTemplate("FinalizeHostEmail", {
           to: poll.user.email,
@@ -817,13 +768,6 @@ export const polls = router({
         });
 
         for (const p of participantsToEmail) {
-          const { date, day, dow, time } = formatEventDateTime({
-            start: scheduledEvent.start,
-            end: scheduledEvent.end,
-            allDay: scheduledEvent.allDay,
-            timeZone: scheduledEvent.timeZone,
-            inviteeTimeZone: p.timeZone,
-          });
           getEmailClient(p.locale ?? undefined).queueTemplate(
             "FinalizeParticipantEmail",
             {
@@ -874,6 +818,14 @@ export const polls = router({
           },
         });
 
+        if (poll.eventId) {
+          await prisma.event.delete({
+            where: {
+              id: poll.eventId,
+            },
+          });
+        }
+
         if (poll.scheduledEventId) {
           await prisma.scheduledEvent.delete({
             where: {
@@ -919,7 +871,6 @@ export const polls = router({
           hideParticipants: true,
           hideScores: true,
           disableComments: true,
-          spaceId: true,
           options: {
             select: {
               startTime: true,
@@ -943,7 +894,6 @@ export const polls = router({
           userId: ctx.user.id,
           timeZone: poll.timeZone,
           location: poll.location,
-          spaceId: poll.spaceId,
           description: poll.description,
           hideParticipants: poll.hideParticipants,
           hideScores: poll.hideScores,

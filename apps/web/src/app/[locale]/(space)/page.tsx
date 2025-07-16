@@ -1,7 +1,6 @@
-import { prisma } from "@rallly/database";
 import { Tile, TileDescription, TileGrid, TileTitle } from "@rallly/ui/tile";
-import type { Metadata } from "next";
 import Link from "next/link";
+
 import {
   BillingPageIcon,
   CreatePageIcon,
@@ -18,25 +17,40 @@ import {
   PageHeader,
   PageTitle,
 } from "@/app/components/page-layout";
+import { requireUser } from "@/auth/queries";
 import { Trans } from "@/components/trans";
 import { IfCloudHosted } from "@/contexts/environment";
-import { loadUpcomingEventsCount } from "@/data/event";
-import { loadActiveSpace } from "@/data/space";
 import { getTranslation } from "@/i18n/server";
+import { prisma } from "@rallly/database";
 import { FeedbackAlert } from "./feedback-alert";
 
 async function loadData() {
-  const space = await loadActiveSpace();
+  const user = await requireUser();
 
+  if (!user) {
+    return {
+      livePollCount: 0,
+      upcomingEventCount: 0,
+    };
+  }
+
+  const now = new Date();
   const [livePollCount, upcomingEventCount] = await Promise.all([
     prisma.poll.count({
       where: {
-        spaceId: space.id,
+        userId: user.id,
         status: "live",
         deleted: false,
       },
     }),
-    loadUpcomingEventsCount(),
+    prisma.event.count({
+      where: {
+        userId: user.id,
+        start: {
+          gte: now,
+        },
+      },
+    }),
   ]);
 
   return {
@@ -125,7 +139,7 @@ export default async function Page() {
           </h2>
           <TileGrid>
             <Tile asChild>
-              <Link href="/account/profile">
+              <Link href="/settings/profile">
                 <ProfilePageIcon />
                 <TileTitle>
                   <Trans i18nKey="profile" defaults="Profile" />
@@ -134,7 +148,7 @@ export default async function Page() {
             </Tile>
 
             <Tile asChild>
-              <Link href="/account/preferences">
+              <Link href="/settings/preferences">
                 <PreferencesPageIcon />
                 <TileTitle>
                   <Trans i18nKey="preferences" defaults="Preferences" />
@@ -143,7 +157,7 @@ export default async function Page() {
             </Tile>
             <IfCloudHosted>
               <Tile asChild>
-                <Link href="/account/billing">
+                <Link href="/settings/billing">
                   <BillingPageIcon />
                   <TileTitle>
                     <Trans i18nKey="billing" defaults="Billing" />
@@ -158,7 +172,7 @@ export default async function Page() {
   );
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata() {
   const { t } = await getTranslation();
   return {
     title: t("home", {

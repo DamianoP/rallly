@@ -10,8 +10,8 @@ import {
   FormMessage,
 } from "@rallly/ui/form";
 import { Input } from "@rallly/ui/input";
-import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -70,7 +70,7 @@ export function LoginWithEmailForm() {
                   : ""
               }`,
             );
-          } catch (_e) {
+          } catch (e) {
             form.setError("identifier", {
               message: t("userNotFound", {
                 defaultValue: "A user with that email doesn't exist",

@@ -37,9 +37,6 @@ export const user = router({
         },
       });
     }),
-  /**
-   * @deprecated - Use server actions instead
-   */
   delete: privateProcedure.mutation(async ({ ctx }) => {
     if (ctx.user.isGuest) {
       throw new TRPCError({

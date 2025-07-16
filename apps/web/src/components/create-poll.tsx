@@ -9,16 +9,18 @@ import {
   CardTitle,
 } from "@rallly/ui/card";
 import { Form } from "@rallly/ui/form";
-import { toast } from "@rallly/ui/sonner";
+import { useToast } from "@rallly/ui/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useForm } from "react-hook-form";
 import useFormPersist from "react-hook-form-persist";
 import { useUnmount } from "react-use";
+
 import { PollSettingsForm } from "@/components/forms/poll-settings";
 import { Trans } from "@/components/trans";
 import { useUser } from "@/components/user-provider";
 import { trpc } from "@/trpc/client";
+
 import type { NewEventData } from "./forms";
 import { PollDetailsForm, PollOptionsForm } from "./forms";
 
@@ -40,6 +42,7 @@ export interface CreatePollPageProps {
 export const CreatePoll: React.FunctionComponent = () => {
   const router = useRouter();
   const { user, createGuestIfNeeded } = useUser();
+  const { toast } = useToast();
   const form = useForm<NewEventData>({
     defaultValues: {
       title: "",
@@ -66,7 +69,10 @@ export const CreatePoll: React.FunctionComponent = () => {
     networkMode: "always",
     onError: (error) => {
       if (error.data?.code === "BAD_REQUEST") {
-        toast.error(error.message);
+        toast({
+          title: "Error",
+          description: error.message,
+        });
       }
     },
   });

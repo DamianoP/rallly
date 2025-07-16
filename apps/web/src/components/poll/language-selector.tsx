@@ -1,4 +1,5 @@
 import languages from "@rallly/languages";
+import { Button } from "@rallly/ui/button";
 import { Icon } from "@rallly/ui/icon";
 import {
   Select,
@@ -16,11 +17,13 @@ export const LanguageSelect: React.FunctionComponent<{
 }> = ({ className, value, onChange }) => {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={className}>
-        <Icon>
-          <LanguagesIcon />
-        </Icon>
-        <SelectValue />
+      <SelectTrigger asChild className={className}>
+        <Button>
+          <Icon>
+            <LanguagesIcon />
+          </Icon>
+          <SelectValue />
+        </Button>
       </SelectTrigger>
       <SelectContent>
         {Object.entries(languages).map(([code, name]) => (

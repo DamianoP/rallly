@@ -15,10 +15,7 @@ function joinPath(baseUrl: string, subpath = "") {
   return baseUrl;
 }
 
-export function absoluteUrl(
-  subpath = "",
-  query: { [key: string]: string | undefined } = {},
-) {
+export function absoluteUrl(subpath = "", query: Record<string, string> = {}) {
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL ??
     getVercelUrl() ??
@@ -26,11 +23,10 @@ export function absoluteUrl(
 
   const url = new URL(subpath, baseUrl);
 
-  for (const [key, value] of Object.entries(query)) {
-    if (value) {
-      url.searchParams.set(key, value);
-    }
-  }
+  // biome-ignore lint/complexity/noForEach: Fix this later
+  Object.entries(query).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
 
   const urlString = url.href;
 

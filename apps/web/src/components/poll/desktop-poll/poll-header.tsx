@@ -7,8 +7,9 @@ import {
 } from "@rallly/ui/tooltip";
 import { ClockIcon } from "lucide-react";
 import type * as React from "react";
-import { ConnectedScoreSummary } from "@/components/poll/score-summary";
+
 import { useOptions } from "@/components/poll-context";
+import { ConnectedScoreSummary } from "@/components/poll/score-summary";
 import { Trans } from "@/components/trans";
 
 const TimeRange: React.FunctionComponent<{

@@ -4,11 +4,8 @@ import { absoluteUrl } from "@rallly/utils/absolute-url";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireUser } from "@/data/user";
-import type {
-  SubscriptionCheckoutMetadata,
-  SubscriptionMetadata,
-} from "@/features/subscription/schema";
+
+import { auth } from "@/next-auth";
 
 const inputSchema = z.object({
   period: z.enum(["monthly", "yearly"]).optional(),
@@ -17,32 +14,48 @@ const inputSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const { user } = await requireUser();
-
+  const userSession = await auth();
   const formData = await request.formData();
-  const data = inputSchema.safeParse(Object.fromEntries(formData.entries()));
+  const { period = "monthly", return_path } = inputSchema.parse(
+    Object.fromEntries(formData.entries()),
+  );
 
-  if (!data.success) {
-    return NextResponse.json(data.error, { status: 400 });
+  if (!userSession?.user || userSession.user?.email === null) {
+    // You need to be logged in to subscribe
+    return NextResponse.redirect(
+      new URL(
+        `/login${
+          return_path ? `?redirect=${encodeURIComponent(return_path)}` : ""
+        }`,
+        request.url,
+      ),
+      303,
+    );
   }
 
-  const { period, return_path } = data.data;
-
-  let customerId: string;
-
-  const res = await prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUnique({
     where: {
-      id: user.id,
+      id: userSession.user.id,
     },
     select: {
+      email: true,
+      name: true,
       customerId: true,
+      subscription: {
+        select: {
+          active: true,
+        },
+      },
     },
   });
 
-  if (res.customerId) {
-    customerId = res.customerId;
-  } else {
-    // create a new customer in stripe
+  if (!user) {
+    return new NextResponse(null, { status: 404 });
+  }
+
+  let customerId = user.customerId;
+
+  if (!customerId) {
     const customer = await stripe.customers.create({
       email: user.email,
       name: user.name,
@@ -50,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.user.update({
       where: {
-        id: user.id,
+        id: userSession.user.id,
       },
       data: {
         customerId: customer.id,
@@ -60,7 +73,7 @@ export async function POST(request: NextRequest) {
     customerId = customer.id;
   }
 
-  if (user.isPro) {
+  if (user.subscription?.active === true) {
     // User already has an active subscription. Take them to customer portal
     return NextResponse.redirect(
       new URL("/api/stripe/portal", request.url),
@@ -70,22 +83,7 @@ export async function POST(request: NextRequest) {
 
   const proPricingData = await getProPricing();
 
-  let spaceId = user.activeSpaceId;
-
-  if (!spaceId) {
-    const space = await prisma.space.findFirstOrThrow({
-      where: {
-        ownerId: user.id,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    spaceId = space.id;
-  }
-
-  const checkoutSession = await stripe.checkout.sessions.create({
+  const session = await stripe.checkout.sessions.create({
     success_url: absoluteUrl(
       return_path ?? "/api/stripe/portal?session_id={CHECKOUT_SESSION_ID}",
     ),
@@ -102,14 +100,12 @@ export async function POST(request: NextRequest) {
       enabled: true,
     },
     metadata: {
-      userId: user.id,
-      spaceId,
-    } satisfies SubscriptionCheckoutMetadata,
+      userId: userSession.user.id,
+    },
     subscription_data: {
       metadata: {
-        userId: user.id,
-        spaceId,
-      } satisfies SubscriptionMetadata,
+        userId: userSession.user.id,
+      },
     },
     line_items: [
       {
@@ -132,9 +128,9 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  if (checkoutSession.url) {
+  if (session.url) {
     // redirect to checkout session
-    return NextResponse.redirect(checkoutSession.url, 303);
+    return NextResponse.redirect(session.url, 303);
   }
 
   return NextResponse.json(

@@ -4,9 +4,9 @@ import { Trans } from "react-i18next/TransWithoutContext";
 import { EmailLayout } from "../components/email-layout";
 import {
   Button,
-  borderColor,
   Heading,
   Text,
+  borderColor,
 } from "../components/styled-components";
 import type { EmailContext } from "../types";
 
@@ -58,7 +58,7 @@ const FinalizeHostEmail = ({
           components={{
             b: <strong />,
           }}
-          defaults="<b>{title}</b> has been booked for:"
+          defaults="<b>{{title}}</b> has been booked for:"
         />
       </Text>
       <Section>
@@ -123,7 +123,7 @@ FinalizeHostEmail.getSubject = (
   ctx: EmailContext,
 ) => {
   return ctx.t("finalizeHost_subject", {
-    defaultValue: "Date booked for {title}",
+    defaultValue: "Date booked for {{title}}",
     title: props.title,
     ns: "emails",
   });

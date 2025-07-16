@@ -9,7 +9,6 @@ import {
   CommandList,
 } from "@rallly/ui/command";
 import { DialogDescription, DialogTitle, useDialog } from "@rallly/ui/dialog";
-import { Icon } from "@rallly/ui/icon";
 import {
   ArrowRightIcon,
   KeySquareIcon,
@@ -18,6 +17,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
 import {
   BillingPageIcon,
   EventPageIcon,
@@ -28,11 +28,17 @@ import {
   ProfilePageIcon,
 } from "@/app/components/page-icons";
 import { Trans } from "@/components/trans";
+
 import { useUser } from "@/components/user-provider";
 import { useTranslation } from "@/i18n/client";
+import { Icon } from "@rallly/ui/icon";
 import { CommandGlobalShortcut } from "./command-global-shortcut";
 
-function NavigationCommandLabel({ label }: { label: string }) {
+function NavigationCommandLabel({
+  label,
+}: {
+  label: string;
+}) {
   return (
     <div>
       <Trans
@@ -101,15 +107,15 @@ export function CommandMenu() {
           <CommandGroup
             heading={<Trans i18nKey="settings" defaults="Settings" />}
           >
-            <CommandItem onSelect={() => handleSelect("/account/profile")}>
+            <CommandItem onSelect={() => handleSelect("/settings/profile")}>
               <ProfilePageIcon size="sm" />
               <NavigationCommandLabel label={t("profile")} />
             </CommandItem>
-            <CommandItem onSelect={() => handleSelect("/account/preferences")}>
+            <CommandItem onSelect={() => handleSelect("/settings/preferences")}>
               <PreferencesPageIcon size="sm" />
               <NavigationCommandLabel label={t("preferences")} />
             </CommandItem>
-            <CommandItem onSelect={() => handleSelect("/account/billing")}>
+            <CommandItem onSelect={() => handleSelect("/settings/billing")}>
               <BillingPageIcon size="sm" />
               <NavigationCommandLabel label={t("billing")} />
             </CommandItem>

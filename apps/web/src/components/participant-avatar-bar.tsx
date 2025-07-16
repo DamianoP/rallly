@@ -44,7 +44,7 @@ export const ParticipantAvatarBar = ({
               <OptimizedAvatarImage
                 name={participant.name}
                 src={participant.image}
-                size="sm"
+                size="xs"
               />
             </li>
           </TooltipTrigger>

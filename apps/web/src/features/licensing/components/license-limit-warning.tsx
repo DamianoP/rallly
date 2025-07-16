@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { Trans } from "@/components/trans";
-import { loadInstanceLicense } from "@/data/instance-license";
+import { getLicense } from "@/features/licensing/queries";
 import { getUserCount } from "@/features/user/queries";
 import { isSelfHosted } from "@/utils/constants";
+import Link from "next/link";
 
 export async function LicenseLimitWarning() {
   if (!isSelfHosted) {
@@ -10,7 +10,7 @@ export async function LicenseLimitWarning() {
   }
 
   const [license, userCount] = await Promise.all([
-    loadInstanceLicense(),
+    getLicense(),
     getUserCount(),
   ]);
 

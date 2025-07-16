@@ -1,6 +1,3 @@
-/** biome-ignore-all lint/a11y/useSemanticElements: fix later */
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: fix later */
-/** biome-ignore-all lint/a11y/useFocusableInteractive: fix later */
 "use client";
 import type { Participant, VoteType } from "@rallly/database";
 import { cn } from "@rallly/ui";
@@ -55,7 +52,7 @@ const PollOptionVoteSummary: React.FunctionComponent<{ optionId: string }> = ({
               // biome-ignore lint/suspicious/noArrayIndexKey: Fix this later
               <div key={i} className="flex">
                 <div className="relative mr-2.5 flex size-5 items-center justify-center">
-                  <OptimizedAvatarImage size="sm" name={name} />
+                  <OptimizedAvatarImage size="xs" name={name} />
                   <VoteIcon
                     type="yes"
                     size="sm"
@@ -69,7 +66,7 @@ const PollOptionVoteSummary: React.FunctionComponent<{ optionId: string }> = ({
               // biome-ignore lint/suspicious/noArrayIndexKey: Fix this later
               <div key={i} className="flex">
                 <div className="relative mr-2.5 flex size-5 items-center justify-center">
-                  <OptimizedAvatarImage size="sm" name={name} />
+                  <OptimizedAvatarImage size="xs" name={name} />
                   <VoteIcon
                     type="ifNeedBe"
                     size="sm"
@@ -85,7 +82,7 @@ const PollOptionVoteSummary: React.FunctionComponent<{ optionId: string }> = ({
               // biome-ignore lint/suspicious/noArrayIndexKey: Fix this later
               <div key={i} className="flex">
                 <div className="relative mr-2.5 flex size-5 items-center justify-center">
-                  <OptimizedAvatarImage size="sm" name={name} />
+                  <OptimizedAvatarImage size="xs" name={name} />
                   <VoteIcon
                     type="no"
                     size="sm"
@@ -117,8 +114,8 @@ const PollOption: React.FunctionComponent<PollOptionProps> = ({
   const [active, setActive] = React.useState(false);
   const [isExpanded, toggle] = useToggle(false);
   return (
+    // biome-ignore lint/a11y/useKeyWithClickEvents: Fix this later
     <div
-      role="button"
       className={cn("space-y-4 bg-white p-4", {
         "bg-gray-500/5": editable && active,
       })}

@@ -2,6 +2,7 @@ import { prisma } from "@rallly/database";
 import { posthog } from "@rallly/posthog/server";
 import NextAuth from "next-auth";
 import type { Provider } from "next-auth/providers";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { CustomPrismaAdapter } from "./auth/adapters/prisma";
@@ -63,11 +64,9 @@ const {
           distinctId: user.id,
           event: "register",
           properties: {
-            method: "sso",
             $set: {
               name: user.name,
               email: user.email,
-              tier: "hobby",
               timeZone: user.timeZone ?? undefined,
               locale: user.locale ?? undefined,
             },
@@ -95,7 +94,7 @@ const {
   },
   callbacks: {
     ...nextAuthConfig.callbacks,
-    async signIn({ user, email, profile }) {
+    async signIn({ user, email, profile, account }) {
       if (email?.verificationRequest) {
         const isRegisteredUser =
           (await prisma.user.count({
@@ -170,6 +169,14 @@ const auth = cache(async () => {
   }
 });
 
+const requireUser = async () => {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+  return { userId: session.user.id };
+};
+
 /**
  * If email is not set it means the user is a guest
  * @returns
@@ -184,4 +191,4 @@ export const getLoggedIn = async () => {
   return !!session?.user?.email;
 };
 
-export { auth, handlers, signIn, signOut };
+export { auth, handlers, requireUser, signIn, signOut };

@@ -1,27 +1,18 @@
-import "server-only";
-
+"server-only";
 import { prisma } from "@rallly/database";
-import { unstable_cache } from "next/cache";
-import { instanceSettingsTag } from "./constants";
+import { cache } from "react";
 
-export const getInstanceSettings = unstable_cache(
-  async () => {
-    const instanceSettings = await prisma.instanceSettings.findUnique({
-      where: {
-        id: 1,
-      },
-      select: {
-        disableUserRegistration: true,
-      },
-    });
+export const getInstanceSettings = cache(async () => {
+  const instanceSettings = await prisma.instanceSettings.findUnique({
+    where: {
+      id: 1,
+    },
+    select: {
+      disableUserRegistration: true,
+    },
+  });
 
-    return {
-      disableUserRegistration:
-        instanceSettings?.disableUserRegistration ?? false,
-    };
-  },
-  [],
-  {
-    tags: [instanceSettingsTag],
-  },
-);
+  return {
+    disableUserRegistration: instanceSettings?.disableUserRegistration ?? false,
+  };
+});

@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
+import Link from "next/link";
 import { Trans } from "react-i18next/TransWithoutContext";
 
 import { GoogleProvider } from "@/auth/providers/google";
 import { MicrosoftProvider } from "@/auth/providers/microsoft";
 import { OIDCProvider } from "@/auth/providers/oidc";
-import { getInstanceSettings } from "@/features/instance-settings/queries";
 import { getTranslation } from "@/i18n/server";
+
+import { getInstanceSettings } from "@/features/instance-settings/queries";
 import {
   AuthPageContainer,
   AuthPageContent,
@@ -14,7 +15,6 @@ import {
   AuthPageHeader,
   AuthPageTitle,
 } from "../components/auth-page";
-import { LinkWithRedirectTo } from "../components/link-with-redirect-to";
 import { AuthErrors } from "./components/auth-errors";
 import { LoginWithEmailForm } from "./components/login-email-form";
 import { LoginWithOIDC } from "./components/login-with-oidc";
@@ -96,7 +96,7 @@ export default async function LoginPage(props: {
             i18nKey="loginFooter"
             defaults="Don't have an account? <a>Sign up</a>"
             components={{
-              a: <LinkWithRedirectTo className="text-link" href="/register" />,
+              a: <Link className="text-link" href="/register" />,
             }}
           />
         </AuthPageExternal>
@@ -107,7 +107,7 @@ export default async function LoginPage(props: {
 
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+}) {
   const params = await props.params;
   const { t } = await getTranslation(params.locale);
   return {

@@ -1,11 +1,10 @@
 import "../../style.css";
 
 import languages from "@rallly/languages";
-import { PostHogProvider } from "@rallly/posthog/client";
 import { Analytics } from "@vercel/analytics/react";
-import { domAnimation, LazyMotion } from "motion/react";
+import { LazyMotion, domAnimation } from "motion/react";
 import type { Viewport } from "next";
-import { PostHogPageView } from "@/components/posthog-page-view";
+
 import { sans } from "@/fonts/sans";
 import { I18nProvider } from "@/i18n/client/i18n-provider";
 
@@ -32,12 +31,7 @@ export default async function Root(props: {
     <html lang={locale} className={sans.className}>
       <body>
         <LazyMotion features={domAnimation}>
-          <I18nProvider locale={locale}>
-            <PostHogProvider>
-              <PostHogPageView />
-              {children}
-            </PostHogProvider>
-          </I18nProvider>
+          <I18nProvider locale={locale}>{children}</I18nProvider>
         </LazyMotion>
         <Analytics />
       </body>

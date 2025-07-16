@@ -1,5 +1,6 @@
 "use client";
 
+import { Trans } from "@/components/trans";
 import { Button } from "@rallly/ui/button";
 import {
   Dialog,
@@ -14,15 +15,18 @@ import {
 } from "@rallly/ui/dialog";
 import { Icon } from "@rallly/ui/icon";
 import { XIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Trans } from "@/components/trans";
-import { useSafeAction } from "@/features/safe-action/client";
-import { removeInstanceLicenseAction } from "../actions";
+import { removeInstanceLicense } from "../mutations";
 
-export function RemoveLicenseButton() {
+export function RemoveLicenseButton({
+  licenseId,
+}: {
+  licenseId: string;
+}) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const dialog = useDialog();
-  const removeInstanceLicense = useSafeAction(removeInstanceLicenseAction);
   return (
     <Dialog {...dialog.dialogProps}>
       <DialogTrigger asChild>
@@ -56,7 +60,10 @@ export function RemoveLicenseButton() {
             variant="destructive"
             onClick={() =>
               startTransition(async () => {
-                await removeInstanceLicense.executeAsync();
+                await removeInstanceLicense({
+                  licenseId,
+                });
+                router.refresh();
                 dialog.dismiss();
               })
             }

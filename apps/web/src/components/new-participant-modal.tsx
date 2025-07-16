@@ -11,8 +11,8 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 
 import { usePoll } from "@/contexts/poll";
-import { useTimezone } from "@/features/timezone";
 import { useTranslation } from "@/i18n/client";
+
 import { useAddParticipantMutation } from "./poll/mutations";
 import VoteIcon from "./poll/vote-icon";
 import { useUser } from "./user-provider";
@@ -89,7 +89,7 @@ export const NewParticipantForm = (props: NewParticipantModalProps) => {
   const poll = usePoll();
 
   const isEmailRequired = poll.requireParticipantEmail;
-  const { timezone } = useTimezone();
+
   const { user, createGuestIfNeeded } = useUser();
   const isLoggedIn = !user.isGuest;
   const { register, setError, formState, handleSubmit } =
@@ -117,7 +117,6 @@ export const NewParticipantForm = (props: NewParticipantModalProps) => {
             votes: props.votes,
             email: data.email,
             pollId: poll.id,
-            timeZone: timezone,
           });
           props.onSubmit?.(newParticipant);
         } catch (error) {

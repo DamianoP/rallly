@@ -32,7 +32,7 @@ const nextConfig = {
     rules: {
       "*.svg": {
         loaders: ["@svgr/webpack"],
-        as: "*.js",
+        as: ".js",
       },
     },
   },
@@ -54,21 +54,6 @@ const nextConfig = {
       {
         source: "/auth/disable-notifications",
         destination: "/api/notifications/unsubscribe",
-        permanent: true,
-      },
-      {
-        source: "/settings/profile",
-        destination: "/account/profile",
-        permanent: true,
-      },
-      {
-        source: "/settings/preferences",
-        destination: "/account/preferences",
-        permanent: true,
-      },
-      {
-        source: "/settings/billing",
-        destination: "/account/billing",
         permanent: true,
       },
     ];

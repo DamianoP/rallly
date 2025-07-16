@@ -2,8 +2,8 @@ import type { PollStatus } from "@rallly/database";
 import { Button } from "@rallly/ui/button";
 import { absoluteUrl, shortUrl } from "@rallly/utils/absolute-url";
 import { InboxIcon } from "lucide-react";
-import type { Metadata } from "next";
 import Link from "next/link";
+import { z } from "zod";
 
 import { PollPageIcon } from "@/app/components/page-icons";
 import {
@@ -22,28 +22,62 @@ import {
 } from "@/components/empty-state";
 import { Pagination } from "@/components/pagination";
 import { Trans } from "@/components/trans";
-import { loadPolls } from "@/data/poll";
+import { getPolls } from "@/features/poll/api/get-polls";
 import { PollList, PollListItem } from "@/features/poll/components/poll-list";
 import { getTranslation } from "@/i18n/server";
+import { requireUser } from "@/next-auth";
 
 import { SearchInput } from "../../../components/search-input";
 import { PollsTabbedView } from "./polls-tabbed-view";
-import { DEFAULT_PAGE_SIZE, searchParamsSchema } from "./schema";
+
+const DEFAULT_PAGE_SIZE = 10;
+
+const pageSchema = z
+  .string()
+  .nullish()
+  .transform((val) => {
+    if (!val) return 1;
+    const parsed = Number.parseInt(val, 10);
+    return Number.isNaN(parsed) || parsed < 1 ? 1 : parsed;
+  });
+
+const querySchema = z
+  .string()
+  .nullish()
+  .transform((val) => val?.trim() || undefined);
+
+const statusSchema = z
+  .enum(["live", "paused", "finalized"])
+  .nullish()
+  .transform((val) => val || "live");
+
+const pageSizeSchema = z
+  .string()
+  .nullish()
+  .transform((val) => {
+    if (!val) return DEFAULT_PAGE_SIZE;
+    const parsed = Number.parseInt(val, 10);
+    return Number.isNaN(parsed) || parsed < 1
+      ? DEFAULT_PAGE_SIZE
+      : Math.min(parsed, 100);
+  });
 
 // Combined schema for type inference
 async function loadData({
+  userId,
   status = "live",
   page = 1,
   pageSize = DEFAULT_PAGE_SIZE,
   q,
 }: {
+  userId: string;
   status?: PollStatus;
   page?: number;
   pageSize?: number;
   q?: string;
 }) {
   const [{ total, data: polls }] = await Promise.all([
-    loadPolls({ status, page, pageSize, q }),
+    getPolls({ userId, status, page, pageSize, q }),
   ]);
 
   return {
@@ -52,7 +86,7 @@ async function loadData({
   };
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata() {
   const { t } = await getTranslation();
   return {
     title: t("polls", {
@@ -90,19 +124,24 @@ function PollsEmptyState() {
 export default async function Page(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { t } = await getTranslation();
-
   const searchParams = await props.searchParams;
-  const { status, page, pageSize, q } = searchParamsSchema.parse(searchParams);
+  const { t } = await getTranslation();
+  const { userId } = await requireUser();
+
+  const parsedStatus = statusSchema.parse(searchParams.status);
+  const parsedPage = pageSchema.parse(searchParams.page);
+  const parsedPageSize = pageSizeSchema.parse(searchParams.pageSize);
+  const parsedQuery = querySchema.parse(searchParams.q);
 
   const { polls, total } = await loadData({
-    status,
-    page,
-    pageSize,
-    q,
+    userId,
+    status: parsedStatus,
+    page: parsedPage,
+    pageSize: parsedPageSize,
+    q: parsedQuery,
   });
 
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.ceil(total / parsedPageSize);
 
   return (
     <PageContainer>
@@ -153,10 +192,10 @@ export default async function Page(props: {
                 </PollList>
                 {totalPages > 1 ? (
                   <Pagination
-                    currentPage={page}
+                    currentPage={parsedPage}
                     totalPages={totalPages}
                     totalItems={total}
-                    pageSize={pageSize}
+                    pageSize={parsedPageSize}
                     className="mt-4"
                   />
                 ) : null}

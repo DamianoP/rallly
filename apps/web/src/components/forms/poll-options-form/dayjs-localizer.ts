@@ -2,6 +2,7 @@
 import { DateLocalizer } from "react-big-calendar";
 
 const weekRangeFormat = ({ start, end }, culture, local) =>
+  // biome-ignore lint/style/useTemplate: Fix this later
   local.format(start, "MMMM DD", culture) +
   " – " +
   local.format(end, local.eq(start, end, "month") ? "DD" : "MMMM DD", culture);
@@ -244,7 +245,7 @@ export default function (dayjs) {
     return mStart.isBefore(mFirst, "day");
   }
 
-  function continuesAfter(_start, end, last) {
+  function continuesAfter(start, end, last) {
     const mEnd = dayjs(end);
     const mLast = dayjs(last);
     return mEnd.isSameOrAfter(mLast, "minutes");

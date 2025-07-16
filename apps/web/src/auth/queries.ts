@@ -1,13 +1,9 @@
-import { redirect } from "next/navigation";
-import { defineAbilityFor } from "@/features/ability-manager";
 import { getUser } from "@/features/user/queries";
 import { auth } from "@/next-auth";
+import { notFound, redirect } from "next/navigation";
+import { cache } from "react";
 
-export const isInitialAdmin = (email: string) => {
-  return email.toLowerCase() === process.env.INITIAL_ADMIN_EMAIL?.toLowerCase();
-};
-
-export const requireUserAbility = async () => {
+export const requireUser = cache(async () => {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
@@ -19,10 +15,22 @@ export const requireUserAbility = async () => {
     redirect("/api/auth/invalid-session");
   }
 
-  return {
-    user,
-    ability: defineAbilityFor(user, {
-      isInitialAdmin: isInitialAdmin(user.email),
-    }),
-  };
-};
+  return user;
+});
+
+export const isInitialAdmin = cache((email: string) => {
+  return email.toLowerCase() === process.env.INITIAL_ADMIN_EMAIL?.toLowerCase();
+});
+
+export const requireAdmin = cache(async () => {
+  const user = await requireUser();
+
+  if (user.role !== "admin") {
+    if (isInitialAdmin(user.email)) {
+      redirect("/admin-setup");
+    }
+    notFound();
+  }
+
+  return user;
+});

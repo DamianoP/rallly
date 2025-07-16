@@ -17,12 +17,6 @@ type Preferences = {
 
 const timeFormatSchema = z.enum(["hours12", "hours24"]);
 
-const preferencesSchema = z.object({
-  timeZone: z.string().optional(),
-  timeFormat: timeFormatSchema.optional(),
-  weekStart: z.number().optional(),
-});
-
 type PreferencesContextValue = {
   preferences: Preferences;
   updatePreferences: (preferences: Partial<Preferences>) => Promise<void>;
@@ -40,33 +34,45 @@ export const PreferencesProvider = ({
   initialValue: Partial<Preferences>;
 }) => {
   const { user } = useUser();
-  const [preferences = {}, setPreferences] = useLocalStorage(
-    "rallly.preferences",
-    initialValue,
+  const [preferredTimezone, setPreferredTimezone] = useLocalStorage(
+    "rallly.preferredTimezone",
+    initialValue.timeZone,
+  );
+  const [preferredTimeFormat, setPreferredTimeFormat] = useLocalStorage(
+    "rallly.preferredTimeFormat",
+    initialValue.timeFormat,
     {
       raw: false,
-      serializer: JSON.stringify,
-      deserializer: (value) => {
-        try {
-          return preferencesSchema.parse(JSON.parse(value));
-        } catch {
-          return {};
-        }
-      },
+      serializer: timeFormatSchema.parse,
+      deserializer: timeFormatSchema.optional().catch(undefined).parse,
     },
   );
-
+  const [preferredWeekStart, setPreferredWeekStart] = useLocalStorage(
+    "rallly.preferredWeekStart",
+    initialValue.weekStart,
+  );
   const updatePreferences = trpc.user.updatePreferences.useMutation();
 
   return (
     <PreferencesContext.Provider
       value={{
-        preferences,
+        preferences: {
+          timeZone: preferredTimezone,
+          timeFormat: preferredTimeFormat,
+          weekStart: preferredWeekStart,
+        },
         updatePreferences: async (newPreferences) => {
-          setPreferences((prev) => ({
-            ...prev,
-            ...newPreferences,
-          }));
+          if (newPreferences.timeZone) {
+            setPreferredTimezone(newPreferences.timeZone);
+          }
+
+          if (newPreferences.timeFormat) {
+            setPreferredTimeFormat(newPreferences.timeFormat);
+          }
+
+          if (newPreferences.weekStart) {
+            setPreferredWeekStart(newPreferences.weekStart);
+          }
 
           if (!user.isGuest) {
             await updatePreferences.mutateAsync({

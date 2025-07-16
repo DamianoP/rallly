@@ -16,9 +16,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@rallly/ui/dropdown-menu";
+import { useToast } from "@rallly/ui/hooks/use-toast";
 import { Icon } from "@rallly/ui/icon";
 import { Input } from "@rallly/ui/input";
-import { toast } from "@rallly/ui/sonner";
 import { Textarea } from "@rallly/ui/textarea";
 import dayjs from "dayjs";
 import {
@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
+
 import { OptimizedAvatarImage } from "@/components/optimized-avatar-image";
 import { Participant, ParticipantName } from "@/components/participant";
 import { useParticipants } from "@/components/participants-provider";
@@ -36,6 +37,7 @@ import { usePoll } from "@/contexts/poll";
 import { useRole } from "@/contexts/role";
 import { useTranslation } from "@/i18n/client";
 import { trpc } from "@/trpc/client";
+
 import { requiredString } from "../../utils/form-validation";
 import TruncatedLinkify from "../poll/truncated-linkify";
 import { useUser } from "../user-provider";
@@ -77,13 +79,17 @@ function NewCommentForm({
         content: "",
       },
     });
+  const { toast } = useToast();
 
   const addComment = trpc.polls.comments.add.useMutation({
     onSuccess: () => {
       posthog?.capture("created comment");
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast({
+        title: "Error",
+        description: error.message,
+      });
     },
   });
   return (
@@ -202,7 +208,7 @@ function DiscussionInner() {
                       <Participant>
                         <OptimizedAvatarImage
                           name={comment.authorName}
-                          size="sm"
+                          size="xs"
                         />
                         <ParticipantName>{comment.authorName}</ParticipantName>
                         {session.ownsObject(comment) ? (

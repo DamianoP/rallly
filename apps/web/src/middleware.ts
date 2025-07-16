@@ -1,4 +1,5 @@
 import { getPreferredLocale } from "@rallly/languages/get-preferred-locale";
+import { getPosthogBootstrapCookie } from "@rallly/posthog/utils";
 import { NextResponse } from "next/server";
 
 import { withAuth } from "@/auth/edge";
@@ -25,6 +26,15 @@ export const middleware = withAuth(async (req) => {
   const res = NextResponse.rewrite(newUrl);
   res.headers.set("x-locale", locale);
   res.headers.set("x-pathname", pathname);
+
+  if (req.auth?.user?.id) {
+    const bootstrapCookie = getPosthogBootstrapCookie({
+      distinctID: req.auth.user.id,
+    });
+    if (bootstrapCookie) {
+      res.cookies.set(bootstrapCookie);
+    }
+  }
 
   return res;
 });

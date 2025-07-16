@@ -1,17 +1,5 @@
-import { prisma } from "@rallly/database";
-import { cn } from "@rallly/ui";
-import { Icon } from "@rallly/ui/icon";
-import { Tile, TileGrid, TileTitle } from "@rallly/ui/tile";
-import {
-  GaugeIcon,
-  InfinityIcon,
-  KeySquareIcon,
-  SettingsIcon,
-  UsersIcon,
-} from "lucide-react";
-import type { Metadata } from "next";
-import Link from "next/link";
 import { PageIcon } from "@/app/components/page-icons";
+import { requireAdmin } from "@/auth/queries";
 import {
   FullWidthLayout,
   FullWidthLayoutContent,
@@ -19,28 +7,35 @@ import {
   FullWidthLayoutTitle,
 } from "@/components/full-width-layout";
 import { Trans } from "@/components/trans";
-import { loadInstanceLicense } from "@/data/instance-license";
-import { loadAdminUserAbility } from "@/data/user";
+import { getLicense } from "@/features/licensing/queries";
+import { prisma } from "@rallly/database";
+import { cn } from "@rallly/ui";
+import { Tile, TileGrid, TileTitle } from "@rallly/ui/tile";
+import {
+  GaugeIcon,
+  KeySquareIcon,
+  SettingsIcon,
+  UsersIcon,
+} from "lucide-react";
+import Link from "next/link";
 
 async function loadData() {
-  const [_, userCount, license] = await Promise.all([
-    loadAdminUserAbility(),
+  await requireAdmin();
+
+  const [userCount, license] = await Promise.all([
     prisma.user.count(),
-    loadInstanceLicense(),
+    getLicense(),
   ]);
 
   return {
     userCount,
-    license,
+    userLimit: license?.seats ?? 1,
+    tier: license?.type,
   };
 }
 
 export default async function AdminPage() {
-  const { userCount, license } = await loadData();
-
-  const userLimit = license?.seats ?? 1;
-  const tier = license?.type;
-
+  const { userCount, userLimit, tier } = await loadData();
   return (
     <FullWidthLayout>
       <FullWidthLayoutHeader>
@@ -85,13 +80,9 @@ export default async function AdminPage() {
                         values={{ count: userCount }}
                       />
                       /
-                      {userLimit === Number.POSITIVE_INFINITY ? (
-                        <Icon className="inline-flex">
-                          <InfinityIcon />
-                        </Icon>
-                      ) : (
-                        userLimit
-                      )}
+                      {userLimit === Number.POSITIVE_INFINITY
+                        ? "unlimited"
+                        : userLimit}
                     </span>
                   </div>
                 </div>
@@ -139,7 +130,7 @@ export default async function AdminPage() {
   );
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata() {
   return {
     title: "Control Panel",
   };
